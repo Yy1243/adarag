@@ -1,0 +1,111 @@
+project_root: /home/yy/adarag_repro
+output_dir: outputs_metis_hnsw_online
+
+seed: 42
+slot_size: 90
+n_slots: 15
+acc_mode: token
+
+slot_sizing:
+  mode: fixed
+
+dataset:
+  split: validation
+  max_examples: 3300
+  local_path: /home/yy/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+
+light_retriever:
+  corpus_path: /home/yy/adarag_repro/adarag_assets/data/kb/wiki_passages_w100_1m.jsonl
+  index_path: /home/yy/adarag_repro/adarag_assets/data/kb/faiss_hnsw_full_bge.index
+  embedding_model: /home/yy/adarag_repro/adarag_assets/bge-base-en-v1.5/BAAI/bge-base-en-v1.5
+  rebuild: false
+  device: cpu
+  top_n: 10
+
+llm:
+  backend: openai_compat
+  base_url: http://127.0.0.1:8000/v1
+  api_key: EMPTY
+  model: qwen25-7b
+  system_prompt: "You are a helpful assistant."
+  max_new_tokens: 16
+  temperature: 0.0
+  top_p: 1.0
+  request_timeout_s: 120
+  max_retries: 2
+  retry_sleep_s: 1
+  tokenizer: /home/yy/adarag_repro/adarag_assets/ms_qwen2.5/Qwen/Qwen2.5-7B-Instruct
+  max_model_len: 8192
+
+profiler:
+  base_url: ""
+  api_key: ""
+  model: ""
+  request_timeout_s: 60
+  max_retries: 2
+  retry_sleep_s: 1
+  temperature: 0.0
+  max_tokens: 256
+  default_confidence: 0.80
+  min_pieces: 1
+  max_pieces: 10
+  min_summary_len: 30
+  max_summary_len: 200
+  dataset_metadata: "Natural Questions Open short-answer QA over Wikipedia passages. Each retrieved chunk is a short Wikipedia passage."
+
+vllm_state:
+  metrics_url: http://127.0.0.1:8000/metrics
+  metrics_timeout_s: 1.0
+  gpu_id: 0
+  enable_nvidia_smi_fallback: true
+
+metis:
+  top_k: 10
+  request_max_workers: 8
+  prompt_max_doc_chars: 1600
+  save_retrieved_docs: false
+  save_raw_outputs: false
+
+  selector:
+    confidence_threshold: 0.90
+    low_confidence_policy: conservative_union
+    default_k_min: 1
+    default_k_max: 10
+    max_model_len: 8192
+    max_batch_tokens: 8192
+    prompt_max_doc_chars: 1600
+    max_answer_tokens: 16
+    mapper_min_tokens: 30
+    mapper_max_tokens: 200
+    high_gpu_cache_threshold: 0.80
+    high_waiting_threshold: 1
+    high_gpu_util_threshold: 90
+    low_free_mem_mib_threshold: 6000
+    prefer_highest_fit: true
+
+  synthesis:
+    prompt_max_doc_chars: 1600
+    max_answer_tokens: 16
+    map_rerank_max_tokens: 64
+    reduce_max_tokens: 16
+    inner_max_workers: 8
+
+evaluation:
+  quality_score_mode: judge
+
+judge:
+  enabled: true
+  backend: hf
+  model: /home/yy/adarag_repro/adarag_assets/Qwen1.5-14B-Chat
+  tokenizer: /home/yy/adarag_repro/adarag_assets/Qwen1.5-14B-Chat
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  system_prompt: "You are a strict QA evaluator."
+  max_new_tokens: 8
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false

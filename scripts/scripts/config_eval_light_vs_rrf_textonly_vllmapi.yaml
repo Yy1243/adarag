@@ -1,0 +1,84 @@
+seed: 42
+acc_mode: token
+
+system:
+  prompt_max_doc_chars: 1600
+
+light_retriever:
+  corpus_path: /T20050013/adarag_repro/adarag_assets/data/kb/wiki_passages_w100_1m.jsonl
+  index_path: /T20050013/adarag_repro/adarag_assets/data/kb/faiss_hnsw_full_bge.index
+  embedding_model: /T20050013/adarag_repro/adarag_assets/bge-base-en-v1.5/BAAI/bge-base-en-v1.5
+  rebuild: false
+  device: cpu
+  top_n: 10
+
+heavy_retriever:
+  type: hybrid_dense_bm25
+  top_n: 10
+
+  es_url: http://127.0.0.1:9200
+  index_name: adarag_kb_v2_1m
+  request_timeout: 120
+
+  # BM25 使用纯文本模式
+  bm25_query_mode: text_only_simple
+  bm25_k: 50  
+  bm25_top_n: 50
+  bm25_max_per_title: 10
+
+  # Dense 分支
+  dense_top_n: 50
+
+  # Weighted RRF
+  merge_mode: protected_rrf
+  dense_keep_n: 8
+  bm25_keep_n: 2
+  rrf_k: 60
+  dense_weight: 1.0
+  bm25_weight: 0.2
+
+  # 不用 reranker，不用 query rewrite
+  simplify_bm25: true
+  rewrite_mode: none
+  reranker_model:
+  rerank_k: 0
+
+  # 去重：同 title 不当作重复，按 title+text 去重
+  dedup_key_mode: title_text
+  max_per_title: 5            #改成3也行
+
+  profile: false
+  device: cpu
+
+llm:
+  backend: openai_compat
+  base_url: http://127.0.0.1:8000/v1
+  api_key: EMPTY
+  model: qwen25-7b
+  system_prompt: "You are a helpful assistant."
+  max_new_tokens: 16
+  temperature: 0.0
+  top_p: 1.0
+  request_timeout_s: 120
+  max_retries: 2
+  retry_sleep_s: 1
+
+dataset:
+  split: validation
+  max_examples: 3000
+  local_path: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+
+judge_llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/Qwen1.5-14B-Chat
+  tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen1.5-14B-Chat
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  max_new_tokens: 8
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false

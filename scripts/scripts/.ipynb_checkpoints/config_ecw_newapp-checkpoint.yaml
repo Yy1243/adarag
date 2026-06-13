@@ -1,0 +1,89 @@
+seed: 42
+output_dir: outputs_ecw_newapp
+n_docs: 10
+quality_target: 0.60
+acc_mode: token
+
+ecw:
+  pkl_path: /T20050013/adarag_repro/ECWDataset-main/ECWDataset-main/ECW_newapp.pkl
+  arrival_scale: 1
+  max_steps: 200
+  micro_batch: 32
+  rounding: round
+  time_round_digits: 2
+  save_examples: false
+  examples_max_per_hour: 20
+
+system:
+  force_heavy: false
+  prompt_max_doc_chars: 6000
+  exec_mode: overlap
+  heavy_max_workers: 1
+
+light_retriever:
+  corpus_path: /T20050013/adarag_repro/adarag_assets/data/kb/wiki_passages_200k.jsonl
+  index_path: /T20050013/adarag_repro/adarag_assets/data/kb/faiss_hnsw_200k_bge.index
+  embedding_model: /T20050013/adarag_repro/adarag_assets/bge-base-en-v1.5/BAAI/bge-base-en-v1.5
+  rebuild: false
+  max_passages: 200000
+  device: cpu          # 对齐 real_min
+  top_n: 10
+
+heavy_retriever:
+  type: bm25_es
+  es_url: http://127.0.0.1:9200
+  top_n: 10
+  bm25_k: 100          # 对齐 real_min
+  rerank_k: 50         # 对齐 real_min（即便不用也保持一致）
+  rerank_batch_size: 32
+  rerank_max_doc_chars: 2000
+  reranker_model: null # 对齐 real_min：禁用 reranker
+  profile: true
+  device: cpu
+  index_name: adarag_kb_v2
+  collapse_field: title.kw
+  max_per_title: 5
+  minimum_should_match: null
+  request_timeout: 30
+
+llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/ms_qwen2.5/Qwen/Qwen2___5-7B-Instruct
+  tokenizer: /T20050013/adarag_repro/adarag_assets/ms_qwen2.5/Qwen/Qwen2___5-7B-Instruct
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  system_prompt: "You are a helpful assistant."
+  max_new_tokens: 64
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false
+
+optimizer:
+  alpha: 0.08
+  mu: 0.3
+  delta: 0.05
+  gamma: 0.05
+
+dataset:
+  split: validation
+  max_examples: 1500
+  local_path: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+
+judge_llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/Qwen1.5-14B-Chat
+  tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen1.5-14B-Chat
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  max_new_tokens: 8
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false

@@ -1,0 +1,25 @@
+seed: 42
+beta: 0.95
+slot_size: 50
+n_slots: 10
+n_docs: 10
+output_dir: /T20050013/adarag_repro/outputs_pareto_offline_triprobe
+
+dataset:
+  local_path: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation_with_qid.jsonl
+
+optimizer:
+  q_target: 0.44
+  alpha: 0.0005
+  mu: 0.005
+  delta: 0.05
+  gamma: 0.08
+  nu_min: 0.0
+  nu_max: 50.0
+  nu_init: 10
+
+offline_sim:
+  probe_csv: /T20050013/adarag_repro/outputs_offline_probe_table_stable_k0_full/offline_probe_detailed.csv
+  similarity_csv: /T20050013/adarag_repro/outputs_offline_probe_table_stable_k0_full/light_score_sum_top10.csv
+  similarity_qid_col: qid
+  similarity_score_col: light_score_sum_top10

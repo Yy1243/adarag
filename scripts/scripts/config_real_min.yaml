@@ -1,0 +1,102 @@
+seed: 42
+output_dir: outputs_real_min
+slot_size: 50   #每个时间戳里面的问题数量
+n_slots: 10      #设定时间戳数量，总问题数 = slot_size * n_slots = 1500
+n_docs: 10   #每个问题检索的文档数量
+quality_target: 0.45
+acc_mode: token
+
+system:
+  force_heavy: false
+  prompt_max_doc_chars: 1600
+  exec_mode: overlap
+  heavy_max_workers: 2        #heavy retriever的线程数，论文里是4，这里先设成1调试，确保单线程没问题再调大，降并发
+
+light_retriever:
+  corpus_path: /T20050013/adarag_repro/adarag_assets/data/kb/wiki_passages_w100_1m.jsonl
+  index_path: /T20050013/adarag_repro/adarag_assets/data/kb/faiss_hnsw_1m_bge.index
+  embedding_model: /T20050013/adarag_repro/adarag_assets/bge-base-en-v1.5/BAAI/bge-base-en-v1.5
+  rebuild: false
+  max_passages: 1000000
+  device: cpu
+  top_n: 50
+
+heavy_retriever:
+  type: bm25_es                        #hybrid_dense_bm25  
+  es_url: http://127.0.0.1:9200
+  top_n: 10
+  bm25_k: 200
+  rerank_k: 30
+  rerank_batch_size: 8  
+  rerank_max_doc_chars: 512
+  reranker_model:     #/T20050013/adarag_repro/adarag_assets/model-cache/models/BAAI__bge-reranker-base
+  profile: false        #去掉 ES 查询分析开销
+  device: cpu
+  index_name: adarag_kb_v2_1m                  #adarag_kb_v2
+  collapse_field: null       # 按 title 字段做 collapse，title.kw
+  max_per_title: 2                    # 每个 title 保留几段 passage
+  minimum_should_match: null          # 先关掉做 A/B
+  request_timeout: 120
+  # --- CPU rewrite (PRF) ---
+  #rewrite_mode: keyword
+  #rewrite_prf_docs: 5
+  #rewrite_prf_terms: 8
+  #rewrite_doc_max_chars: 400
+  #rewrite_min_df: 2
+  #simplify_bm25: false  
+  #merge_mode: score_fuse    # dense_first / bm25_first / dense_cap/score_fuse 在/T20050013/adarag_repro/adarag/retrievers/heavy_hybrid_dense_bm25.py中进行定义的,现在是调试所以加了很多参数
+  #score_fuse_norm: rank    
+  #score_fuse_w_dense: 0.40     #处理score_fuse里面的
+  #score_fuse_w_bm25: 0.60
+  #bm25_keep_n: 3 
+  #dense_keep_n: 10        # 对于 dense_first 和 bm25_first，只针对dense_cap,这个参数没有意义，因为它们会返回所有文档，只是排序不同。对于 dense_capsule，这个参数决定了在最终融合之前，dense 和 bm25 各自保留多少 top 文档进行融合。设为 5 意味着从 dense 和 bm25 各自的结果中保留前 5 个文档，共 10 个文档进入融合阶段。
+  #dedup_key_mode: title_text    #处理融合机制
+  #rrf_k: 60       #处理融合机制
+  #dense_top_n: 50
+  #bm25_top_n: 50
+
+llm:
+   backend: hf
+   model: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-0.5B-Instruct
+   tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-0.5B-Instruct
+   device: cuda
+   dtype: float16
+   use_chat_template: true
+   system_prompt: "You are a helpful assistant."
+   max_new_tokens: 16
+   temperature: 0.0
+   top_p: 1.0
+   top_k: 0
+   repetition_penalty: 1.0
+   local_files_only: true
+   trust_remote_code: false
+
+optimizer:
+   alpha: 0.0002
+   mu: 0.01
+   delta: 0.05
+   radius_r: 0.2
+   strict_perturbation_check: false
+   feasibility_tol: 1e-8
+
+dataset:
+  split: validation
+  max_examples: 1500
+  local_path: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+
+judge_llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-3B-Instruct
+  tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-3B-Instruct
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  max_new_tokens: 8
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false
+
+

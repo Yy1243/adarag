@@ -1,0 +1,88 @@
+seed: 42
+acc_mode: token
+
+system:
+  prompt_max_doc_chars: 1600
+
+light_retriever:
+  corpus_path: /T20050013/adarag_repro/adarag_assets/data/kb/wiki_passages_w100_1m.jsonl
+  index_path: /T20050013/adarag_repro/adarag_assets/data/kb/faiss_hnsw_1m_bge.index
+  embedding_model: /T20050013/adarag_repro/adarag_assets/bge-base-en-v1.5/BAAI/bge-base-en-v1.5
+  rebuild: false
+  max_passages: 1000000
+  device: cpu
+  top_n: 10
+
+heavy_retriever:
+  type: hybrid_dense_bm25
+  dense_top_n: 50
+  es_url: http://127.0.0.1:9200
+  index_name: adarag_kb_v2_1m
+  bm25_k: 80
+  bm25_top_n: 80
+  minimum_should_match: null
+  collapse_field: null
+  max_per_title: 2
+  request_timeout: 120
+  top_n: 10
+  merge_mode: rrf
+  rrf_k: 60
+  dense_keep_n: 50
+  bm25_keep_n: 50
+  simplify_bm25: false
+  dedup_key_mode: title_text
+  rewrite_mode: dense_prf
+  rewrite_prf_docs: 5
+  rewrite_prf_terms: 8
+  rewrite_doc_max_chars: 300
+  rewrite_min_df: 2
+  reranker_model:
+  rerank_k: 0
+  rerank_batch_size: 8
+  rerank_max_doc_chars: 256
+  profile: false
+  device: cpu
+
+llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-0.5B-Instruct
+  tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-0.5B-Instruct
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  system_prompt: "You are a helpful assistant."
+  max_new_tokens: 16
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false
+
+dataset:
+  split: validation
+  max_examples: 1500
+  local_path: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation_with_qid.jsonl
+
+judge_llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-3B-Instruct
+  tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-3B-Instruct
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  max_new_tokens: 8
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false
+
+offline_probe:
+  fetch_topn: 10
+  max_k: 10
+  repeats: 4
+  drop_first: 1
+  round_digits: 2
+  cpu_threads: 2

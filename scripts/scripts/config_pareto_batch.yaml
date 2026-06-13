@@ -1,0 +1,101 @@
+seed: 42
+output_dir: outputs_pareto_real
+slot_size: 50
+n_slots: 10
+n_docs: 10
+beta: 0.95
+acc_mode: token
+
+system:
+  force_heavy: false
+  prompt_max_doc_chars: 1600
+  exec_mode: overlap
+  heavy_max_workers: 2
+
+light_retriever:
+  corpus_path: /T20050013/adarag_repro/adarag_assets/data/kb/wiki_passages_w100_1m.jsonl
+  index_path: /T20050013/adarag_repro/adarag_assets/data/kb/faiss_hnsw_1m_bge.index
+  embedding_model: /T20050013/adarag_repro/adarag_assets/bge-base-en-v1.5/BAAI/bge-base-en-v1.5
+  rebuild: false
+  max_passages: 1000000
+  device: cpu
+  top_n: 10
+
+heavy_retriever:
+  type: bm25_es
+  es_url: http://127.0.0.1:9200
+  top_n: 10
+  bm25_k: 200
+  rerank_k: 30
+  rerank_batch_size: 8
+  rerank_max_doc_chars: 512
+  reranker_model:
+  profile: false
+  device: cpu
+  index_name: adarag_kb_v2_1m
+  collapse_field: null
+  max_per_title: 2
+  minimum_should_match: null
+  request_timeout: 120
+  #rewrite_mode: keyword
+  #rewrite_prf_docs: 5
+  #rewrite_prf_terms: 8
+  #rewrite_doc_max_chars: 400
+  #rewrite_min_df: 2
+  #simplify_bm25: false
+  #merge_mode: score_fuse
+  #score_fuse_norm: rank
+  #score_fuse_w_dense: 0.40
+  #score_fuse_w_bm25: 0.60
+  #bm25_keep_n: 3
+  #dense_keep_n: 10
+  #dedup_key_mode: title_text
+  #rrf_k: 60
+  #dense_top_n: 50
+  #bm25_top_n: 50
+
+llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-0.5B-Instruct
+  tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-0.5B-Instruct
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  system_prompt: "You are a helpful assistant."
+  max_new_tokens: 16
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false
+
+optimizer:
+  q_target: 0.44       
+  alpha: 0.0005         #0.0002
+  mu: 0.005           #0.01
+  delta: 0.05
+  gamma: 0.08         #0.25
+  nu_min: 0.0
+  nu_max: 5.0
+  nu_init: 1.3
+
+dataset:
+  split: validation
+  max_examples: 1500
+  local_path: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+
+judge_llm:
+  backend: hf
+  model: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-3B-Instruct
+  tokenizer: /T20050013/adarag_repro/adarag_assets/Qwen/Qwen2.5-3B-Instruct
+  device: cuda
+  dtype: float16
+  use_chat_template: true
+  max_new_tokens: 8
+  temperature: 0.0
+  top_p: 1.0
+  top_k: 0
+  repetition_penalty: 1.0
+  local_files_only: true
+  trust_remote_code: false

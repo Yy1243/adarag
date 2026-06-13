@@ -1,0 +1,40 @@
+base_config: scripts/config_eval_light_heavy_7b_j14b.yaml
+
+dataset: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+max_questions: 300
+
+es:
+  url: http://127.0.0.1:9200
+  index_name: adarag_kb_v2_1m
+  timeout: 120
+  query_mode: cross_fields
+  max_per_title: 5
+
+retrieval:
+  dense_topn: 200
+  bm25_topn: 300
+
+rrf:
+  alpha: 1.0
+  beta: 0.2
+  k: 60
+  pool_topk: 100
+
+rerank:
+  model: /T20050013/adarag_repro/adarag_assets/model-cache/models/BAAI__bge-reranker-base
+  device: cuda
+  batch_size: 8
+  max_length: 512
+
+generation:
+  gen_topk: 10
+  prompt_max_doc_chars: 1600
+  prompt_mode: original
+  acc_mode: token
+  paths:
+    - dense_top10
+    - rrf_top10
+    - rerank_top10
+
+output:
+  out_csv: outputs_weighted_rrf_rerank_generation_eval_300q.csv

@@ -1,0 +1,1 @@
+"""ParetoAdaRAG clean reimplementation on top of the existing AdaRAG codebase."""

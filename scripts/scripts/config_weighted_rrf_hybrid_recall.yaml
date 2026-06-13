@@ -1,0 +1,24 @@
+base_config: scripts/config_eval_light_heavy_7b_j14b.yaml
+
+dataset: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+max_questions: 300
+
+es:
+  url: http://127.0.0.1:9200
+  index_name: adarag_kb_v2_1m
+  timeout: 120
+  query_mode: cross_fields
+  max_per_title: 5
+
+retrieval:
+  dense_topn: 200
+  bm25_topn: 300
+
+rrf:
+  alpha: 1.0
+  beta: 0.2
+  k: 60
+  final_topk: 10
+
+output:
+  out_csv: outputs_weighted_rrf_hybrid_recall_300q_0.2.csv

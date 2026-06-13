@@ -1,0 +1,43 @@
+base_config: scripts/config_eval_light_heavy_7b_j14b.yaml
+
+dataset: /T20050013/adarag_repro/adarag_assets/data/datasets/nq_open_validation.jsonl
+max_questions: 1000
+
+es:
+  url: http://127.0.0.1:9200
+  index_name: adarag_kb_v2_1m
+  timeout: 120
+  query_mode: cross_fields
+  max_per_title: 5
+
+retrieval:
+  dense_topn: 200
+  bm25_topn: 300
+
+rrf:
+  alpha: 1.0
+  beta: 0.2
+  k: 60
+  final_topk: 10
+  pool_topk: 100
+
+rerank:
+  model: /T20050013/adarag_repro/adarag_assets/model-cache/models/Qwen__Qwen3-Reranker-0.6B
+  device: cuda
+  batch_size: 4
+  max_length: 1024
+  final_topk: 10
+  instruction: "Given an open-domain question, retrieve passages that contain the exact answer or evidence needed to answer it."
+
+generation:
+  gen_topk: 10
+  prompt_max_doc_chars: 1600
+  acc_mode: token
+  prompt_mode: context_only
+  paths:
+    - dense_top10
+    - rrf_top10
+    - rerank_top10
+
+output:
+  out_csv: outputs_weighted_rrf_qwen3_generation_eval_1000q_context_only.csv
